@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Extracted Data</title>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <!-- Add table headers for your data columns -->
+          <th>Page</th>
+          <th>Text</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% data.forEach((text, index) => { %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= text %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </body>
+</html>
