@@ -1,8 +1,8 @@
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
-const { processPDF, extractFootData } = require("./pdfProcessor");
 const mysql = require("mysql");
+const pdf = require("pdf-parse");
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
@@ -15,12 +15,81 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 
-app.post("/upload", upload.single("pdf"), async (req, res) => {
-  const pdfPath = req.file.path;
-  const data = await processPDF(pdfPath);
-  const footData = extractFootData(data);
-  fs.unlinkSync(pdfPath); // Delete the uploaded file
-  res.render("table", { footData }, (err, html) => {
+function extractFootData(data) {
+  const content = fs.readFileSync(data);
+  return pdf(content, { max: 1 }).then((data) => {
+    const text = data.text.split("\n");
+
+    let index = text.findIndex((line) => line.includes("足部分析报告"));
+    if (index > 1) {
+      text.splice(0, index - 1);
+    }
+    const enumeratedText = text
+      .map((line, index) => `${index}: ${line}`)
+      .join("\n");
+
+    console.log(enumeratedText);
+    // Use regular expressions to extract foot data from the text
+    const shoeSizeRegex = /鞋码(\d{2})(\d{2})/;
+    const match = text[9].match(shoeSizeRegex);
+
+    let shoeSizeLeft, shoeSizeRight;
+    if (match) {
+      shoeSizeLeft = parseInt(match[1], 10);
+      shoeSizeRight = parseInt(match[2], 10);
+    } else {
+      shoeSizeLeft = NaN;
+      shoeSizeRight = NaN;
+    }
+    console.log(`shoeSizeLeft: ${shoeSizeLeft}`);
+
+    const footData = {
+      id_num: text[5],
+      name: text[6],
+      gender: text[7],
+      shoe_size_left: shoeSizeLeft,
+      shoe_size_right: shoeSizeRight,
+      arch_length_left: parseFloat(text[31]),
+      arch_length_right: parseFloat(text[32]),
+      arch_width_left: parseFloat(text[33]),
+      arch_width_right: parseFloat(text[34]),
+      heel_width_left: parseFloat(text[35]),
+      heel_width_right: parseFloat(text[36]),
+      foot_length_left: parseFloat(text[37]),
+      foot_length_right: parseFloat(text[38]),
+      foot_width_left: parseFloat(text[39]),
+      foot_width_right: parseFloat(text[40]),
+      ball_girth_left: parseInt(text[41], 10),
+      ball_girth_right: parseInt(text[42], 10),
+      arch_index_left: parseFloat(text[43]),
+      arch_index_right: parseFloat(text[44]),
+      arch_ratio_left: parseFloat(text[45]),
+      arch_ratio_right: parseFloat(text[46]),
+    };
+    return footData;
+  });
+}
+async function processPDFs(pdfPaths) {
+  const footDataArray = [];
+  for (const pdfPath of pdfPaths) {
+    const footData = await extractFootData(pdfPath);
+    footDataArray.push(footData);
+  }
+  console.log(footDataArray);
+  return Promise.all(footDataArray);
+}
+
+app.post("/upload", upload.array("pdf"), async (req, res) => {
+  const pdfPaths = req.files.map((file) => file.path);
+  console.log(`pdfPaths: ${pdfPaths}`);
+
+  const footDataArray = await processPDFs(pdfPaths);
+  console.log(`footDataArray: ${footDataArray}`);
+  for (const pdfPath of pdfPaths) {
+    fs.unlinkSync(pdfPath); // Delete the uploaded files
+  }
+
+  res.render("table", { footDataArray }, (err, html) => {
     if (err) {
       console.error(err);
       res.status(500).send("Error rendering table");
@@ -31,8 +100,8 @@ app.post("/upload", upload.single("pdf"), async (req, res) => {
 });
 
 app.post("/insert", async (req, res) => {
-  const footData = req.body;
-  console.log(`recieved footData: ${footData}`);
+  const footDataArray = req.body;
+  console.log(`recieved footDataArray: ${footDataArray}`);
   const connection = mysql.createConnection({
     host: "localhost",
     user: "root",
@@ -50,15 +119,20 @@ app.post("/insert", async (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(query, Object.values(footData), (error, results, fields) => {
-    if (error) {
-      console.error(error);
-      res.status(500).send("Error inserting data");
-    } else {
-      res.status(200).send("Data inserted successfully");
-    }
+  footDataArray.forEach((footData) => {
+    connection.query(
+      query,
+      Object.values(footData),
+      (error, results, fields) => {
+        if (error) {
+          console.error(error);
+          res.status(500).send("Error inserting data");
+        }
+      }
+    );
   });
 
+  res.status(200).send("Data inserted successfully");
   connection.end();
 });
 

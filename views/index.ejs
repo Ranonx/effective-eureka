@@ -40,6 +40,7 @@
             id="inputGroupFile02"
             name="pdf"
             accept=".pdf"
+            multiple
             required
           />
           <button class="input-group-text" for="inputGroupFile02" type="submit">
@@ -75,7 +76,12 @@
         .getElementById("upload-form")
         .addEventListener("submit", async (event) => {
           event.preventDefault();
-          const formData = new FormData(event.target);
+          const formData = new FormData();
+          console.log(`formData:${formData}`);
+          const fileInput = document.getElementById("inputGroupFile02");
+          for (const file of fileInput.files) {
+            formData.append("pdf", file);
+          }
           const response = await fetch("/upload", {
             method: "POST",
             body: formData,
@@ -105,15 +111,20 @@
           spinner.classList.remove("d-none");
           uploadText.classList.add("d-none");
 
-          const footDataElement = document.getElementById("foot-data");
-          const footData = JSON.parse(footDataElement.textContent);
+          const footDataElements = Array.from(
+            document.querySelectorAll(".foot-data")
+          );
+          const footDataArray = footDataElements.map((footDataElement) =>
+            JSON.parse(footDataElement.textContent)
+          );
+
           console.log("Sending foot data:", footData);
           const response = await fetch("/insert", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(footData),
+            body: JSON.stringify(footDataArray),
           });
 
           // Hide spinner and show text
