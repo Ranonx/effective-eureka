@@ -103,6 +103,7 @@
       document
         .getElementById("upload-to-db")
         .addEventListener("click", async () => {
+          console.log("db upload click");
           // Show spinner and hide text
           const spinner = document.querySelector(
             "#upload-to-db .spinner-border"
@@ -118,7 +119,7 @@
             JSON.parse(footDataElement.textContent)
           );
 
-          console.log("Sending foot data:", footData);
+          console.log("Sending foot data:", footDataArray);
           const response = await fetch("/insert", {
             method: "POST",
             headers: {

@@ -28,7 +28,6 @@ function extractFootData(data) {
       .map((line, index) => `${index}: ${line}`)
       .join("\n");
 
-    console.log(enumeratedText);
     // Use regular expressions to extract foot data from the text
     const shoeSizeRegex = /鞋码(\d{2})(\d{2})/;
     const match = text[9].match(shoeSizeRegex);
@@ -41,7 +40,6 @@ function extractFootData(data) {
       shoeSizeLeft = NaN;
       shoeSizeRight = NaN;
     }
-    console.log(`shoeSizeLeft: ${shoeSizeLeft}`);
 
     const footData = {
       id_num: text[5],
@@ -81,7 +79,6 @@ async function processPDFs(pdfPaths) {
 
 app.post("/upload", upload.array("pdf"), async (req, res) => {
   const pdfPaths = req.files.map((file) => file.path);
-  console.log(`pdfPaths: ${pdfPaths}`);
 
   const footDataArray = await processPDFs(pdfPaths);
   console.log(`footDataArray: ${footDataArray}`);
@@ -101,7 +98,7 @@ app.post("/upload", upload.array("pdf"), async (req, res) => {
 
 app.post("/insert", async (req, res) => {
   const footDataArray = req.body;
-  console.log(`recieved footDataArray: ${footDataArray}`);
+
   const connection = mysql.createConnection({
     host: "localhost",
     user: "root",
@@ -122,7 +119,29 @@ app.post("/insert", async (req, res) => {
   footDataArray.forEach((footData) => {
     connection.query(
       query,
-      Object.values(footData),
+      [
+        footData.id_num,
+        footData.name,
+        footData.gender,
+        footData.shoe_size_left,
+        footData.shoe_size_right,
+        footData.arch_length_left,
+        footData.arch_length_right,
+        footData.arch_width_left,
+        footData.arch_width_right,
+        footData.heel_width_left,
+        footData.heel_width_right,
+        footData.foot_length_left,
+        footData.foot_length_right,
+        footData.foot_width_left,
+        footData.foot_width_right,
+        footData.ball_girth_left,
+        footData.ball_girth_right,
+        footData.arch_index_left,
+        footData.arch_index_right,
+        footData.arch_ratio_left,
+        footData.arch_ratio_right,
+      ],
       (error, results, fields) => {
         if (error) {
           console.error(error);
