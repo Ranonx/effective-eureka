@@ -20,6 +20,24 @@
       #table-container.show {
         opacity: 1;
       }
+      .progress {
+        position: relative;
+        height: 1rem;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+      }
+
+      .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+        background-color: #007bff;
+        transition: width 0.6s ease;
+      }
     </style>
   </head>
   <body>
@@ -47,6 +65,19 @@
             Upload PDF
           </button>
         </form>
+        <div
+          class="progress d-none"
+          role="progressbar"
+          aria-label="Upload progress"
+        >
+          <div
+            class="progress-bar"
+            style="width: 0%"
+            aria-valuenow="0"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          ></div>
+        </div>
         <div id="table-container"></div>
         <div class="d-flex gap-2 justify-content-center py-5">
           <button
@@ -76,28 +107,47 @@
         .getElementById("upload-form")
         .addEventListener("submit", async (event) => {
           event.preventDefault();
+
+          // Show the progress bar after the form has been submitted
+          const progressBar = document.querySelector(".progress-bar");
+          const progress = document.querySelector(".progress");
+          progressBar.classList.remove("d-none");
+          progress.classList.remove("d-none");
+
           const formData = new FormData();
           console.log(`formData:${formData}`);
           const fileInput = document.getElementById("inputGroupFile02");
           for (const file of fileInput.files) {
             formData.append("pdf", file);
           }
-          const response = await fetch("/upload", {
-            method: "POST",
-            body: formData,
-          });
-          // Check if the response was successful
-          if (response.ok) {
-            // Remove the "d-none" class from the "upload-to-db" button to show it
-            document.getElementById("upload-to-db").classList.remove("d-none");
-          }
-          const tableHTML = await response.text();
-          console.log("Table HTML:", tableHTML); // Debugging line
-          document.getElementById("table-container").innerHTML = tableHTML;
-          document.getElementById("upload-to-db").disabled = false;
 
-          // Add the "show" class to the table container to smoothly reveal the updated table
-          document.getElementById("table-container").classList.add("show");
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/upload");
+          xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = (event.loaded / event.total) * 100;
+              progressBar.style.width = percentComplete + "%";
+              progressBar.setAttribute("aria-valuenow", percentComplete);
+            }
+          });
+          xhr.onload = function () {
+            if (xhr.status === 200) {
+              // Remove the "d-none" class from the "upload-to-db" button to show it
+              document
+                .getElementById("upload-to-db")
+                .classList.remove("d-none");
+            }
+            const tableHTML = xhr.responseText;
+            console.log("Table HTML:", tableHTML); // Debugging line
+            document.getElementById("table-container").innerHTML = tableHTML;
+            document.getElementById("upload-to-db").disabled = false;
+
+            // Add the "show" class to the table container to smoothly reveal the updated table
+            document.getElementById("table-container").classList.add("show");
+            progressBar.classList.add("d-none");
+            progress.classList.add("d-none");
+          };
+          xhr.send(formData);
         });
 
       document
