@@ -56,7 +56,7 @@
             <input
               type="file"
               class="form-control"
-              id="inputGroupFile02"
+              id="DataUploadButton"
               name="pdf"
               accept=".pdf"
               multiple
@@ -64,7 +64,7 @@
             />
             <button
               class="input-group-text"
-              for="inputGroupFile02"
+              for="DataUploadButton"
               type="submit"
             >
               Upload PDF
@@ -121,20 +121,26 @@
       crossorigin="anonymous"
     ></script>
     <script>
+      function toggleDisplay(element, show) {
+        element.classList.toggle("d-none", !show);
+      }
+
+      const progressBar = document.querySelector(".progress-bar");
+      const progress = document.querySelector(".progress");
+      const tableContainer = document.getElementById("table-container");
+      const uploadBtn = document.getElementById("upload-to-db");
+      const DataUploadBtn = document.getElementById("DataUploadButton");
+
       document
         .getElementById("upload-form")
         .addEventListener("submit", async (event) => {
           event.preventDefault();
 
-          // Show the progress bar after the form has been submitted
-          const progressBar = document.querySelector(".progress-bar");
-          const progress = document.querySelector(".progress");
-          progressBar.classList.remove("d-none");
-          progress.classList.remove("d-none");
+          toggleDisplay(progressBar, true);
+          toggleDisplay(progress, true);
 
           const formData = new FormData();
-          console.log(`formData:${formData}`);
-          const fileInput = document.getElementById("inputGroupFile02");
+          const fileInput = DataUploadBtn;
           for (const file of fileInput.files) {
             formData.append("pdf", file);
           }
@@ -150,20 +156,12 @@
           });
           xhr.onload = function () {
             if (xhr.status === 200) {
-              // Remove the "d-none" class from the "upload-to-db" button to show it
-              document
-                .getElementById("upload-to-db")
-                .classList.remove("d-none");
+              toggleDisplay(uploadBtn, true);
             }
-            const tableHTML = xhr.responseText;
-            console.log("Table HTML:", tableHTML); // Debugging line
-            document.getElementById("table-container").innerHTML = tableHTML;
-            document.getElementById("upload-to-db").disabled = false;
-
-            const cancelButton = document.getElementById("cancel-button");
-            cancelButton.classList.remove("d-none");
-            // Add the "show" class to the table container to smoothly reveal the updated table
-            document.getElementById("table-container").classList.add("show");
+            tableContainer.innerHTML = xhr.responseText;
+            uploadBtn.disabled = false;
+            toggleDisplay(document.getElementById("cancel-button"), true);
+            tableContainer.classList.add("show");
           };
           xhr.send(formData);
         });
@@ -171,14 +169,12 @@
       document
         .getElementById("upload-to-db")
         .addEventListener("click", async () => {
-          console.log("db upload click");
-          // Show spinner and hide text
           const spinner = document.querySelector(
             "#upload-to-db .spinner-border"
           );
           const uploadText = document.getElementById("upload-text");
-          spinner.classList.remove("d-none");
-          uploadText.classList.add("d-none");
+          toggleDisplay(spinner, true);
+          toggleDisplay(uploadText, false);
 
           const footDataElements = Array.from(
             document.querySelectorAll(".foot-data")
@@ -187,29 +183,26 @@
             JSON.parse(footDataElement.textContent)
           );
 
-          console.log("Sending foot data:", footDataArray);
           const response = await fetch("/insert", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(footDataArray),
           });
 
-          // Hide spinner and show text
-          spinner.classList.add("d-none");
-          uploadText.classList.remove("d-none");
+          toggleDisplay(spinner, false);
+          toggleDisplay(uploadText, true);
 
           if (response.ok) {
             alert("Data inserted successfully");
           } else {
             alert("Error inserting data");
           }
-          // Clear file input
-          document.getElementById("inputGroupFile02").value = "";
-          document.getElementById("table-container").innerHTML = "";
-          document.getElementById("upload-to-db").disabled = true;
-          document.getElementById("upload-to-db").classList.add("d-none");
+          DataUploadBtn.value = "";
+          tableContainer.innerHTML = "";
+          uploadBtn.disabled = true;
+          toggleDisplay(uploadBtn, false);
+          toggleDisplay(progressBar, false);
+          toggleDisplay(progress, false);
         });
     </script>
   </body>
