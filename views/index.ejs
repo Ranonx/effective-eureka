@@ -91,7 +91,16 @@
               role="status"
               aria-hidden="true"
             ></span>
+
             <span id="upload-text">上传数据库</span>
+          </button>
+          <button
+            id="cancel-button"
+            class="btn btn-outline-secondary px-5 mb-5 d-none"
+            type="button"
+            onclick="window.location.href='/';"
+          >
+            取消
           </button>
         </div>
       </div>
@@ -142,10 +151,10 @@
             document.getElementById("table-container").innerHTML = tableHTML;
             document.getElementById("upload-to-db").disabled = false;
 
+            const cancelButton = document.getElementById("cancel-button");
+            cancelButton.classList.remove("d-none");
             // Add the "show" class to the table container to smoothly reveal the updated table
             document.getElementById("table-container").classList.add("show");
-            progressBar.classList.add("d-none");
-            progress.classList.add("d-none");
           };
           xhr.send(formData);
         });
