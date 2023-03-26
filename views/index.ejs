@@ -47,61 +47,70 @@
       >
         <h1 class="text-body-emphasis">上传文档</h1>
         <p class="col-lg-6 mx-auto mb-4">上传PDF文件并点击上传按钮。</p>
-        <form
-          id="upload-form"
-          class="input-group mb-3"
-          enctype="multipart/form-data"
-        >
-          <input
-            type="file"
-            class="form-control"
-            id="inputGroupFile02"
-            name="pdf"
-            accept=".pdf"
-            multiple
-            required
-          />
-          <button class="input-group-text" for="inputGroupFile02" type="submit">
-            Upload PDF
-          </button>
-        </form>
-        <div
-          class="progress d-none"
-          role="progressbar"
-          aria-label="Upload progress"
-        >
+        <div class="upload-container">
+          <form
+            id="upload-form"
+            class="input-group mb-3"
+            enctype="multipart/form-data"
+          >
+            <input
+              type="file"
+              class="form-control"
+              id="inputGroupFile02"
+              name="pdf"
+              accept=".pdf"
+              multiple
+              required
+            />
+            <button
+              class="input-group-text"
+              for="inputGroupFile02"
+              type="submit"
+            >
+              Upload PDF
+            </button>
+          </form>
           <div
-            class="progress-bar"
-            style="width: 0%"
-            aria-valuenow="0"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          ></div>
+            class="progress d-none"
+            role="progressbar"
+            aria-label="Upload progress"
+          >
+            <div
+              class="progress-bar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
         </div>
-        <div id="table-container"></div>
-        <div class="d-flex gap-2 justify-content-center py-5">
-          <button
-            id="upload-to-db"
-            class="btn btn-primary px-5 mb-5 d-none"
-            type="button"
-            disabled
-          >
-            <span
-              class="spinner-border spinner-border-sm d-none"
-              role="status"
-              aria-hidden="true"
-            ></span>
 
-            <span id="upload-text">上传数据库</span>
-          </button>
-          <button
-            id="cancel-button"
-            class="btn btn-outline-secondary px-5 mb-5 d-none"
-            type="button"
-            onclick="window.location.href='/';"
-          >
-            取消
-          </button>
+        <div class="result-container">
+          <div id="table-container"></div>
+          <div class="d-flex gap-2 justify-content-center">
+            <button
+              id="upload-to-db"
+              class="btn btn-primary px-5 mb-5 d-none"
+              type="button"
+              disabled
+            >
+              <span
+                class="spinner-border spinner-border-sm d-none"
+                role="status"
+                aria-hidden="true"
+              ></span>
+
+              <span id="upload-text">上传数据库</span>
+            </button>
+            <button
+              id="cancel-button"
+              class="btn btn-outline-secondary px-5 mb-5 d-none"
+              type="button"
+              onclick="window.location.href='/';"
+            >
+              取消
+            </button>
+          </div>
         </div>
       </div>
     </div>
